@@ -1,0 +1,361 @@
+SQL Queries for Hotel Booking Analysis
+This document explains the SQL queries used in the hotel booking analysis project, stored in hotel_booking_mysql.txt. The queries analyze a dataset of hotel bookings to answer questions about guest behavior, pricing, and booking patterns. The dataset is stored in a MySQL table called hotel_bookings, and a cleaned version is accessed via a view named cleaned_hotel_bookings. Each query is explained as if you're new to SQL, using simple language and examples, like managing a notebook of hotel records. The goal is to make the code clear for anyone reading this on GitHub.
+
+Table of Contents
+Database and Table Setup
+Data Loading
+Cleaned View Creation
+Query 1: From Where Are Most Guests Coming?
+Query 2: How Much Do Guests Pay for a Room Per Night?
+Query 3: How Does the Price Vary Per Night Over the Year?
+Query 4: Which Are the Most Busy Months?
+Query 5: How Long Do People Stay at the Hotels?
+Query 6: Correlation for is_canceled with lead_time and total_of_special_requests
+1. Database and Table Setup
+Code
+sql
+
+Copy
+CREATE DATABASE IF NOT EXISTS hotel_booking_db;
+USE hotel_booking_db;
+
+CREATE TABLE IF NOT EXISTS hotel_bookings (
+    hotel VARCHAR(50),
+    is_canceled INT,
+    lead_time INT,
+    arrival_date_year INT,
+    arrival_date_month VARCHAR(20),
+    arrival_date_week_number INT,
+    arrival_date_day_of_month INT,
+    stays_in_weekend_nights INT,
+    stays_in_week_nights INT,
+    adults INT,
+    children FLOAT,
+    babies INT,
+    meal VARCHAR(20),
+    country VARCHAR(10),
+    market_segment VARCHAR(50),
+    distribution_channel VARCHAR(50),
+    is_repeated_guest INT,
+    previous_cancellations INT,
+    previous_bookings_not_canceled INT,
+    reserved_room_type VARCHAR(10),
+    assigned_room_type VARCHAR(10),
+    booking_changes INT,
+    deposit_type VARCHAR(20),
+    agent FLOAT,
+    company FLOAT,
+    days_in_waiting_list INT,
+    customer_type VARCHAR(50),
+    adr FLOAT,
+    required_car_parking_spaces INT,
+    total_of_special_requests INT,
+    reservation_status VARCHAR(20),
+    reservation_status_date DATE
+);
+Explanation
+What It Does: This code sets up the foundation for our project, like creating a new notebook (hotel_booking_db) and a blank table (hotel_bookings) to store hotel booking records.
+Step-by-Step:
+CREATE DATABASE IF NOT EXISTS hotel_booking_db: Creates a database named hotel_booking_db if it doesn't already exist. Think of a database as a folder where we store our notebook.
+USE hotel_booking_db: Tells MySQL to work inside this database, like opening the folder.
+CREATE TABLE IF NOT EXISTS hotel_bookings (...): Creates a table called hotel_bookings with columns to store booking details, like a table in your notebook with labeled columns. If the table already exists, it won't create a new one.
+Columns: Each column has a name and type, like:
+hotel VARCHAR(50): Hotel name (e.g., "Resort Hotel"), up to 50 characters.
+is_canceled INT: 0 if the booking wasn't canceled, 1 if it was.
+lead_time INT: Days between booking and arrival (e.g., 30).
+adr FLOAT: Average daily rate (price per night, e.g., 100.50).
+And so on for 32 columns, covering guest details, stay duration, and booking status.
+Why?: This sets up the structure to store our data, like preparing a blank spreadsheet before adding records.
+2. Data Loading
+
+3. Cleaned View Creation
+Code
+sql
+
+Copy
+CREATE VIEW cleaned_hotel_bookings AS
+SELECT
+    COALESCE(hotel, 'Unknown') AS hotel,
+    COALESCE(is_canceled, 0) AS is_canceled,
+    COALESCE(lead_time, 0) AS lead_time,
+    COALESCE(arrival_date_year, 0) AS arrival_date_year,
+    COALESCE(arrival_date_month, 'Unknown') AS arrival_date_month,
+    COALESCE(arrival_date_week_number, 0) AS arrival_date_week_number,
+    COALESCE(arrival_date_day_of_month, 0) AS days_in_waiting_list,
+    COALESCE(stays_in_weekend_nights, 0) AS stays_in_weekend_nights,
+    COALESCE(stays_in_week_nights, 0) AS stays_in_week_nights,
+    COALESCE(adults, 0) AS adults,
+    COALESCE(children, 0) AS children,
+    COALESCE(babies, 0) AS babies,
+    COALESCE(meal, 'Unknown') AS meal,
+    COALESCE(country, 'Unknown') AS country,
+    COALESCE(market_segment, 'Unknown') AS market_segment,
+    COALESCE(distribution_channel, 'Unknown') AS distribution_channel,
+    COALESCE(is_repeated_guest, 0) AS is_repeated_guest,
+    COALESCE(previous_cancellations, 0) AS previous_cancellations,
+    COALESCE(previous_bookings_not_canceled, 0) AS previous_bookings_not_canceled,
+    COALESCE(reserved_room_type, 'Unknown') AS reserved_room_type,
+    COALESCE(assigned_room_type, 'Unknown') AS assigned_room_type,
+    COALESCE(booking_changes, 0) AS booking_changes,
+    COALESCE(deposit_type, 'Unknown') AS deposit_type,
+    COALESCE(agent, 0) AS agent,
+    COALESCE(company, 0) AS company,
+    COALESCE(days_in_waiting_list, 0) AS days_in_waiting_list,
+    COALESCE(customer_type, 'Unknown') AS customer_type,
+    COALESCE(adr, 0) AS adr,
+    COALESCE(required_car_parking_spaces, 0) AS required_car_parking_spaces,
+    COALESCE(total_of_special_requests, 0) AS total_of_special_requests,
+    COALESCE(reservation_status, 'Unknown') AS reservation_status,
+    COALESCE(reservation_status_date, '1900-01-01') AS reservation_status_date
+FROM hotel_bookings
+WHERE NOT (adults = 0 AND COALESCE(children, 0) = 0 AND COALESCE(babies, 0) = 0);
+Explanation
+What It Does: Creates a "view" called cleaned_hotel_bookings, which is like a cleaned-up version of the hotel_bookings notebook where missing or invalid data is fixed.
+Step-by-Step:
+CREATE VIEW cleaned_hotel_bookings AS: Makes a virtual table (view) that shows a cleaned version of hotel_bookings without changing the original data.
+COALESCE(column, 'default'): For each column, if the value is NULL (missing), it uses a default value:
+For text columns (e.g., hotel, arrival_date_month), uses "Unknown".
+For numeric columns (e.g., is_canceled, lead_time, adr), uses 0.
+For dates (reservation_status_date), uses "1900-01-01".
+Example: COALESCE(hotel, 'Unknown') means if hotel is NULL, show "Unknown" instead.
+WHERE NOT (adults = 0 AND COALESCE(children, 0) = 0 AND COALESCE(babies, 0) = 0): Filters out invalid bookings where there are no adults, children, or babies (because a booking needs at least one guest).
+Each column is renamed with AS to match its original name, so the view looks similar to the table but cleaner.
+Why?: This ensures we work with clean data, avoiding issues like missing values or invalid bookings (e.g., no guests). The view is used in all analysis queries to get reliable results.
+4. Query 1: From Where Are Most Guests Coming?
+Code
+sql
+
+Copy
+SELECT
+    country,
+    COUNT(*) AS no_of_guests
+FROM cleaned_hotel_bookings
+WHERE is_canceled = 0
+GROUP BY country
+ORDER BY no_of_guests DESC;
+Explanation
+What It Does: Finds which countries(only non-canceled) send the most guests to the hotels and lists them from most to least guests.
+Step-by-Step:
+SELECT country, COUNT(*) AS no_of_guests: Picks the country column and counts how many bookings for each country. AS no_of_guests names the count column.
+FROM cleaned_hotel_bookings: Uses the cleaned database to avoid missing or invalid data.
+WHERE is_canceled = 0: Only includes bookings that weren’t canceled.
+GROUP BY country: Groups rows by country..so COUNT(*) gives the total bookings per country.
+ORDER BY no_of_guests DESC: Sorts the results from highest to lowest count..so the country with the most guests is first (DESC means descending).
+
+5. Query 2: How Much Do Guests Pay for a Room Per Night?
+Code
+sql
+
+Copy
+SELECT
+    hotel,
+    reserved_room_type,
+    MIN(adr) AS min_adr,
+    MAX(adr) AS max_adr,
+    AVG(adr) AS avg_adr,
+    (SELECT adr FROM cleaned_hotel_bookings t1
+     WHERE t1.hotel = t.hotel AND t1.reserved_room_type = t.reserved_room_type AND t1.is_canceled = 0
+     ORDER BY adr
+     LIMIT 1 OFFSET (SELECT CEIL(COUNT(*) * 0.25) - 1 FROM cleaned_hotel_bookings t2
+                     WHERE t2.hotel = t.hotel AND t2.reserved_room_type = t.reserved_room_type AND t2.is_canceled = 0)) AS q1_adr,
+    (SELECT adr FROM cleaned_hotel_bookings t1
+     WHERE t1.hotel = t.hotel AND t1.reserved_room_type = t.reserved_room_type AND t1.is_canceled = 0
+     ORDER BY adr
+     LIMIT 1 OFFSET (SELECT CEIL(COUNT(*) * 0.5) - 1 FROM cleaned_hotel_bookings t2
+                     WHERE t2.hotel = t.hotel AND t2.reserved_room_type = t.reserved_room_type AND t2.is_canceled = 0)) AS median_adr,
+    (SELECT adr FROM cleaned_hotel_bookings t1
+     WHERE t1.hotel = t.hotel AND t1.reserved_room_type = t.reserved_room_type AND t1.is_canceled = 0
+     ORDER BY adr
+     LIMIT 1 OFFSET (SELECT CEIL(COUNT(*) * 0.75) - 1 FROM cleaned_hotel_bookings t2
+                     WHERE t2.hotel = t.hotel AND t2.reserved_room_type = t.reserved_room_type AND t2.is_canceled = 0)) AS q3_adr
+FROM cleaned_hotel_bookings t
+WHERE is_canceled = 0
+GROUP BY hotel, reserved_room_type
+ORDER BY hotel, reserved_room_type;
+Explanation
+What It Does: Shows how much guests pay per night for each hotel and room type including the minimum, maximum, average and quartile prices (25th, 50th, and 75th percentiles) for non-canceled bookings.
+Step-by-Step:
+SELECT hotel, reserved_room_type: Picks the hotel and room type (e.g., "Resort Hotel", "A") to group results by.
+MIN(adr) AS min_adr: Finds the lowest price per night for each hotel and room type.
+MAX(adr) AS max_adr: Finds the highest price.
+AVG(adr) AS avg_adr: Calculates the average price.
+Quartiles (q1_adr, median_adr, q3_adr):
+These find the 25th percentile (q1_adr), median (50th percentile, median_adr) and 75th percentile (q3_adr) of prices.
+For q1_adr:
+sql
+
+Copy
+(SELECT adr FROM cleaned_hotel_bookings t1
+ WHERE t1.hotel = t.hotel AND t1.reserved_room_type = t.reserved_room_type AND t1.is_canceled = 0
+ ORDER BY adr
+ LIMIT 1 OFFSET (SELECT CEIL(COUNT(*) * 0.25) - 1 FROM cleaned_hotel_bookings t2
+                 WHERE t2.hotel = t.hotel AND t2.reserved_room_type = t.reserved_room_type AND t2.is_canceled = 0))
+Subquery: Gets all prices (adr) for the same hotel and room type, non-canceled, sorted by price (ORDER BY adr).
+OFFSET (SELECT CEIL(COUNT(*) * 0.25) - 1 ...): Skips to the 25th percentile position (e.g., if there are 100 bookings, COUNT(*) * 0.25 = 25, CEIL(25) - 1 = 24, so it skips 24 rows).
+LIMIT 1: Takes the price at that position.
+median_adr (50th percentile) and q3_adr (75th percentile) work the same but use 0.5 and 0.75.
+FROM cleaned_hotel_bookings t: Uses the cleaned notebook, with alias t for reference in subqueries.
+WHERE is_canceled = 0: Only includes non-canceled bookings.
+GROUP BY hotel, reserved_room_type: Groups results by hotel and room type, so MIN, MAX, and AVG are calculated for each combination.
+ORDER BY hotel, reserved_room_type: Sorts results alphabetically by hotel, then room type.
+
+6. Query 3: How Does the Price Vary Per Night Over the Year?
+Code
+sql
+
+Copy
+SELECT
+    arrival_date_month AS month,
+    AVG(CASE WHEN hotel = 'Resort Hotel' THEN adr ELSE NULL END) AS price_for_resort,
+    AVG(CASE WHEN hotel = 'City Hotel' THEN adr ELSE NULL END) AS price_for_city_hotel
+FROM cleaned_hotel_bookings
+WHERE is_canceled = 0
+GROUP BY arrival_date_month
+ORDER BY
+    CASE arrival_date_month
+        WHEN 'January' THEN 1
+        WHEN 'February' THEN 2
+        WHEN 'March' THEN 3
+        WHEN 'April' THEN 4
+        WHEN 'May' THEN 5
+        WHEN 'June' THEN 6
+        WHEN 'July' THEN 7
+        WHEN 'August' THEN 8
+        WHEN 'September' THEN 9
+        WHEN 'October' THEN 10
+        WHEN 'November' THEN 11
+        WHEN 'December' THEN 12
+        ELSE 13
+    END;
+Explanation
+What It Does: Shows how the average price per night changes each month for Resort and City Hotels..for non-canceled bookings..sorted by calendar order.
+Step-by-Step:
+SELECT arrival_date_month AS month: Picks the month (e.g., "January") and renames it month in the output.
+AVG(CASE WHEN hotel = 'Resort Hotel' THEN adr ELSE NULL END) AS price_for_resort:
+CASE WHEN hotel = 'Resort Hotel' THEN adr ELSE NULL END: For each booking if the hotel is "Resort Hotel" take the price (adr); otherwise, use NULL (like ignoring it).
+AVG(...): Calculates the average of these prices ignoring NULL values..so it only averages Resort Hotel prices.
+AS price_for_resort: Names the column price_for_resort.
+Same for price_for_city_hotel but for "City Hotel".
+FROM cleaned_hotel_bookings: Uses the cleaned notebook.
+WHERE is_canceled = 0: Only includes non-canceled bookings.
+GROUP BY arrival_date_month: Groups bookings by month..so AVG calculates the average price for each month.
+ORDER BY CASE ... END: Sorts months in calendar order (January = 1, February = 2, ..., December = 12) instead of alphabetically. ELSE 13 handles any unexpected month names.
+
+7. Query 4: Which Are the Most Busy Months?
+Code
+sql
+
+Copy
+SELECT
+    arrival_date_month AS month,
+    COUNT(CASE WHEN hotel = 'Resort Hotel' THEN 1 END) AS no_of_guests_in_resort,
+    COUNT(CASE WHEN hotel = 'City Hotel' THEN 1 END) AS no_of_guests_in_city_hotel
+FROM cleaned_hotel_bookings
+WHERE is_canceled = 0
+GROUP BY arrival_date_month
+ORDER BY
+    CASE arrival_date_month
+        WHEN 'January' THEN 1
+        WHEN 'February' THEN 2
+        WHEN 'March' THEN 3
+        WHEN 'April' THEN 4
+        WHEN 'May' THEN 5
+        WHEN 'June' THEN 6
+        WHEN 'July' THEN 7
+        WHEN 'August' THEN 8
+        WHEN 'September' THEN 9
+        WHEN 'October' THEN 10
+        WHEN 'November' THEN 11
+        WHEN 'December' THEN 12
+        ELSE 13
+    END;
+Explanation
+What It Does: Counts how many guests stay each month at Resort and City Hotels, for non-canceled bookings, sorted by calendar order.
+Step-by-Step:
+SELECT arrival_date_month AS month: Picks the month and renames it month.
+COUNT(CASE WHEN hotel = 'Resort Hotel' THEN 1 END) AS no_of_guests_in_resort:
+CASE WHEN hotel = 'Resort Hotel' THEN 1 ELSE NULL END: For each booking if the hotel is "Resort Hotel" count it as 1; otherwise, use NULL (like ignoring it).
+COUNT(...): Counts the number of 1s giving the total Resort Hotel bookings. NULL values are ignored.
+AS no_of_guests_in_resort: Names the column.
+Same for no_of_guests_in_city_hotel, but for "City Hotel".
+FROM cleaned_hotel_bookings: Uses the cleaned notebook.
+WHERE is_canceled = 0: Only includes non-canceled bookings.
+GROUP BY arrival_date_month: Groups bookings by month, so COUNT gives the total bookings per month.
+ORDER BY CASE ... END: Sorts months in calendar order (January to December).
+
+8. Query 5: How Long Do People Stay at the Hotels?
+Code
+sql
+
+Copy
+SELECT
+    (stays_in_weekend_nights + stays_in_week_nights) AS total_nights,
+    hotel,
+    COUNT(*) AS number_of_stays
+FROM cleaned_hotel_bookings
+WHERE is_canceled = 0
+GROUP BY (stays_in_weekend_nights + stays_in_week_nights), hotel
+ORDER BY total_nights, hotel;
+Explanation
+What It Does: Shows how many nights guests stay at each hotel and how common each stay length is, for non-canceled bookings.
+Step-by-Step:
+SELECT (stays_in_weekend_nights + stays_in_week_nights) AS total_nights: Adds weekend and weekday nights to get the total stay length (e.g., 2 + 3 = 5 nights) named total_nights.
+hotel: Picks the hotel type (e.g., "Resort Hotel").
+COUNT(*) AS number_of_stays: Counts how many bookings have each total stay length and hotel combination.
+FROM cleaned_hotel_bookings: Uses the cleaned notebook.
+WHERE is_canceled = 0: Only includes non-canceled bookings.
+GROUP BY (stays_in_weekend_nights + stays_in_week_nights) hotel: Groups bookings by total nights and hotel..so COUNT gives the number of bookings for each combination.
+ORDER BY total_nights hotel: Sorts by total nights (smallest to largest) then by hotel name.
+
+9. Query 6: Correlation for is_canceled with lead_time and total_of_special_requests
+Code
+sql
+
+Copy
+SELECT
+    (COUNT(*) * SUM(is_canceled * lead_time) - SUM(is_canceled) * SUM(lead_time)) /
+    (SQRT(COUNT(*) * SUM(is_canceled * is_canceled) - POW(SUM(is_canceled), 2)) *
+     SQRT(COUNT(*) * SUM(lead_time * lead_time) - POW(SUM(lead_time), 2))) AS correlation_is_canceled_lead_time
+FROM cleaned_hotel_bookings;
+
+SELECT
+    (COUNT(*) * SUM(is_canceled * total_of_special_requests) - SUM(is_canceled) * SUM(total_of_special_requests)) /
+    (SQRT(COUNT(*) * SUM(is_canceled * is_canceled) - POW(SUM(is_canceled), 2)) *
+     SQRT(COUNT(*) * SUM(total_of_special_requests * total_of_special_requests) - POW(SUM(total_of_special_requests), 2))) AS correlation_is_canceled_special_requests
+FROM cleaned_hotel_bookings;
+Explanation
+What It Does: Calculates how strongly cancellation (is_canceled) is related to lead_time (days between booking and arrival) and total_of_special_requests (number of special requests, like extra beds). It uses Pearson’s correlation coefficient, giving a number between -1 and +1.
+Step-by-Step (First Query: is_canceled vs. lead_time):
+Correlation Basics:
+Correlation measures if two things (e.g., cancellations and lead time) move together.
++1: Strong positive link (more lead time, more cancellations).
+-1: Strong negative link (more lead time, fewer cancellations).
+0: No link.
+Formula: Uses Pearson’s correlation:
+text
+
+Copy
+(n * Σ(xy) - Σx * Σy) / √[(n * Σ(x²) - (Σx)²) * (n * Σ(y²) - (Σy)²)]
+x = is_canceled (0 or 1), y = lead_time (days).
+n = number of bookings.
+Σ = sum, √ = square root, ² = squared.
+SELECT ... AS correlation_is_canceled_lead_time:
+Numerator: (COUNT(*) * SUM(is_canceled * lead_time) - SUM(is_canceled) * SUM(lead_time))
+COUNT(*): Counts all bookings.
+SUM(is_canceled * lead_time): Multiplies is_canceled by lead_time for each row and sums (e.g., if is_canceled = 1, lead_time = 30, adds 30; if is_canceled = 0, adds 0).
+SUM(is_canceled): Sums is_canceled (total canceled bookings).
+SUM(lead_time): Sums lead_time (total days).
+Denominator:
+sql
+
+Copy
+(SQRT(COUNT(*) * SUM(is_canceled * is_canceled) - POW(SUM(is_canceled), 2)) *
+ SQRT(COUNT(*) * SUM(lead_time * lead_time) - POW(SUM(lead_time), 2)))
+For is_canceled: SUM(is_canceled * is_canceled) is the same as SUM(is_canceled) since 00=0, 11=1. POW(SUM(is_canceled), 2) squares the sum.
+For lead_time: SUM(lead_time * lead_time) sums squared lead times (e.g., 30² = 900). POW(SUM(lead_time), 2) squares the sum.
+SQRT(...): Takes the square root of each part.
+Divides numerator by denominator to get a number between -1 and +1.
+FROM cleaned_hotel_bookings: Uses the cleaned notebook.
+Second Query (is_canceled vs. total_of_special_requests):
+Same as the first, but replaces lead_time with total_of_special_requests (e.g., 2 for two requests).
+Checks if more special requests affect cancellation likelihood.
