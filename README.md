@@ -1,6 +1,6 @@
 # 🏨 Hotel Booking Analysis (SQL + Python)
 
-In this project, I analyzed hotel booking data using **SQL** and **Python** to uncover key insights into guest behavior, pricing, and cancellations.
+In this project I analyzed hotel booking data using **SQL** and **Python** to uncover key insights into guest behavior, pricing and cancellations.
 
 ---
 
@@ -25,7 +25,7 @@ In this project, I analyzed hotel booking data using **SQL** and **Python** to u
 
 ### 2. What Do Guests Pay Per Night by Hotel & Room Type?
 
-- SQL used to calculate min, max, average, Q1, median, and Q3 for ADR
+- SQL used to calculate min, max, average, Q1, median and Q3 for ADR
 - Grouped by hotel and room type
 
 📷 ![ADR Stats](images/adr_statistics.png)
@@ -107,5 +107,3 @@ hotel-booking-sql-python-project/
 ## ✅ Summary
 
 This project combined SQL querying and Python visualization to provide end-to-end insight into hotel booking behavior.
-
-Clean data = clearer answers ✨
