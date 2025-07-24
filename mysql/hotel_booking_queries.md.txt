@@ -67,7 +67,7 @@ adr FLOAT: Average daily rate (price per night, e.g., 100.50).
 And so on for 32 columns, covering guest details, stay duration, and booking status.
 Why?: This sets up the structure to store our data, like preparing a blank spreadsheet before adding records.
 2. Data Loading
-
+i used import wizard in mysql workbench
 3. Cleaned View Creation
 Code
 sql
